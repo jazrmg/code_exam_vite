@@ -144,35 +144,37 @@ const SlackMessenger = () => {
     const delayMs = getMilliseconds(parseInt(delayValue), delayUnit);
     const scheduleTime = Date.now() + delayMs;
 
-    try {
-      const response = await fetch("http://localhost:3001/send-to-slack", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          hookUrl,
-          message: `From ${fromMessage} Slack Bot: ${message}`,
-          scheduleTime,
-        }),
-      });
+    setTimeout(async () => {
+      try {
+        const response = await fetch("http://localhost:3001/send-to-slack", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            hookUrl,
+            message: `From ${fromMessage} Slack Bot: ${message}`,
+            scheduleTime,
+          }),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message ||
-            (response.status === 400
-              ? "Invalid Slack Webhook URL"
-              : "Failed to schedule message")
-        );
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.message ||
+              (response.status === 400
+                ? "Invalid Slack Webhook URL"
+                : "Failed to schedule message")
+          );
+        }
+
+        setIsSuccess(true);
+        setButtonText("Message Scheduled!");
+      } catch (err) {
+        setError(err.message || "Failed to schedule message.");
+        setButtonText("Try Again");
+      } finally {
+        setIsSending(false);
       }
-
-      setIsSuccess(true);
-      setButtonText("Message Scheduled!");
-    } catch (err) {
-      setError(err.message || "Failed to schedule message.");
-      setButtonText("Try Again");
-    } finally {
-      setIsSending(false);
-    }
+    }, delayMs);
   };
 
   const resetForm = () => {
